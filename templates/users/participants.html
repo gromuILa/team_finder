@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Участники — TeamFinder{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Участники</h1>
+</div>
+
+{% if all_skills %}
+<div class="filter-panel">
+    <h3 class="filter-panel__title">Фильтр по навыкам</h3>
+    <div class="filter-tags">
+        {% for skill in all_skills %}
+            <a href="?skill={{ skill.name }}"
+               class="filter-tag {% if active_skill == skill.name %}filter-tag--active{% endif %}">
+                {{ skill.name }}
+            </a>
+        {% endfor %}
+    </div>
+    {% if active_skill %}
+        <a href="/users/list/" class="filter-reset">Сбросить</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if participants %}
+<div class="users-grid">
+    {% for participant in participants %}
+    <div class="card user-card">
+        <div class="user-card__avatar">
+            {% if participant.avatar %}
+                <img src="{{ participant.avatar.url }}" alt="{{ participant.name }}" class="avatar avatar--md">
+            {% else %}
+                <div class="avatar avatar--md avatar--placeholder">{{ participant.name|first }}</div>
+            {% endif %}
+        </div>
+        <div class="user-card__info">
+            <h3 class="user-card__name">
+                <a href="/users/{{ participant.pk }}/">{{ participant.surname }} {{ participant.name }}</a>
+            </h3>
+        </div>
+        <div class="user-card__actions">
+            <a href="/users/{{ participant.pk }}/" class="btn btn--outline btn--sm">Посмотреть контакты</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'includes/pagination.html' with page_obj=page_obj %}
+
+{% else %}
+<div class="empty-state">
+    <p>{% if active_skill %}Нет пользователей с навыком «{{ active_skill }}».{% else %}Нет участников.{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ project.name }} — TeamFinder{% endblock %}
+
+{% block content %}
+<div class="project-detail">
+    <div class="project-detail__header">
+        <div class="project-detail__meta">
+            <span class="badge badge--{{ project.status }}">
+                {% if project.status == 'open' %}Открыт{% else %}Закрыт{% endif %}
+            </span>
+            <time>{{ project.created_at|date:"d.m.Y" }}</time>
+        </div>
+        <div class="project-detail__actions-top">
+            <button class="btn-icon share-btn" data-url="{{ request.build_absolute_uri }}" title="Поделиться">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+            </button>
+            {% if user.is_authenticated %}
+                <button class="btn-icon favorite-btn" data-project-id="{{ project.pk }}" title="В избранное">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <h1 class="project-detail__title">{{ project.name }}</h1>
+
+    <div class="project-detail__author">
+        <a href="/users/{{ project.owner.pk }}/" class="user-link">
+            {% if project.owner.avatar %}
+                <img src="{{ project.owner.avatar.url }}" alt="{{ project.owner.name }}" class="avatar avatar--sm">
+            {% endif %}
+            {{ project.owner.surname }} {{ project.owner.name }}
+        </a>
+    </div>
+
+    {% if project.description %}
+    <div class="project-detail__description">
+        <h2>Описание</h2>
+        <p>{{ project.description }}</p>
+    </div>
+    {% endif %}
+
+    {% if project.github_url %}
+    <div class="project-detail__github">
+        <a href="{{ project.github_url }}" target="_blank" rel="noopener" class="btn btn--outline btn--sm">
+            GitHub репозиторий
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="project-detail__controls">
+        {% if user.is_authenticated %}
+            {% if user == project.owner or user.is_staff %}
+                <div class="owner-controls">
+                    <a href="/projects/{{ project.pk }}/edit/" class="btn btn--outline">Редактировать</a>
+                    {% if project.status == 'open' %}
+                        <button class="btn btn--danger complete-project-btn" data-project-id="{{ project.pk }}">
+                            Завершить проект
+                        </button>
+                    {% endif %}
+                </div>
+            {% elif user != project.owner %}
+                {% if user in project.participants.all %}
+                    <button class="btn btn--outline toggle-participate-btn" data-project-id="{{ project.pk }}">
+                        Отказаться от участия
+                    </button>
+                {% else %}
+                    <button class="btn btn--primary toggle-participate-btn" data-project-id="{{ project.pk }}">
+                        Присоединиться к проекту
+                    </button>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <a href="/users/login/" class="btn btn--primary">Войдите, чтобы присоединиться</a>
+        {% endif %}
+    </div>
+
+    {% if user == project.owner or user.is_staff %}
+    <div class="project-detail__participants">
+        <h2>Участники проекта</h2>
+        {% with parts=project.participants.all %}
+        {% if parts %}
+            <div class="participants-list">
+                {% for p in parts %}
+                <a href="/users/{{ p.pk }}/" class="participant">
+                    {% if p.avatar %}
+                        <img src="{{ p.avatar.url }}" alt="{{ p.name }}" class="avatar avatar--sm">
+                    {% endif %}
+                    <span>{{ p.surname }} {{ p.name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Пока нет участников.</p>
+        {% endif %}
+        {% endwith %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+document.querySelectorAll('.complete-project-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        fetch(`/projects/${btn.dataset.projectId}/complete/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken, 'Content-Type': 'application/json'},
+        }).then(r => r.json()).then(data => {
+            if (data.status === 'ok') location.reload();
+        });
+    });
+});
+
+document.querySelectorAll('.toggle-participate-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        fetch(`/projects/${btn.dataset.projectId}/toggle-participate`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken},
+        }).then(r => r.json()).then(data => {
+            if (data.status === 'ok') location.reload();
+        });
+    });
+});
+
+document.querySelectorAll('.share-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const url = btn.dataset.url || window.location.href;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => alert('Ссылка скопирована!'));
+        } else {
+            prompt('Скопируйте ссылку:', url);
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Редактировать проект{% else %}Создать проект{% endif %} — TeamFinder{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <h1 class="form-page__title">
+        {% if is_edit %}Редактировать проект{% else %}Новый проект{% endif %}
+    </h1>
+
+    <form method="post" class="form">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group {% if field.errors %}form-group--error{% endif %}">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <ul class="form-errors">
+                        {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary">
+                {% if is_edit %}Сохранить изменения{% else %}Опубликовать{% endif %}
+            </button>
+            <a href="javascript:history.back()" class="btn btn--outline">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

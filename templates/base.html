@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TeamFinder{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<header class="header">
+    <div class="container header__inner">
+        <a href="/projects/list/" class="logo">TeamFinder</a>
+        <nav class="nav">
+            <a href="/projects/list/" class="nav__link">Проекты</a>
+            <a href="/users/list/" class="nav__link">Участники</a>
+            {% if user.is_authenticated %}
+                <a href="/projects/create-project/" class="btn btn--primary btn--sm">Создать проект</a>
+                <div class="user-menu">
+                    <a href="/users/{{ user.pk }}/" class="user-menu__trigger">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="{{ user.name }}" class="avatar avatar--sm">
+                        {% else %}
+                            <span class="avatar avatar--sm avatar--placeholder">{{ user.name|first }}</span>
+                        {% endif %}
+                        {{ user.surname }} {{ user.name }}
+                    </a>
+                    <div class="user-menu__dropdown">
+                        <a href="/users/{{ user.pk }}/" class="user-menu__item">Мой профиль</a>
+                        <a href="/users/edit/" class="user-menu__item">Редактировать профиль</a>
+                        <a href="/users/change-password/" class="user-menu__item">Сменить пароль</a>
+                        <a href="/users/logout/" class="user-menu__item user-menu__item--danger">Выйти</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="/users/login/" class="btn btn--outline btn--sm">Войти</a>
+                <a href="/users/register/" class="btn btn--primary btn--sm">Регистрация</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<main class="main">
+    <div class="container">
+        {% if messages %}
+            <div class="messages">
+                {% for msg in messages %}
+                    <div class="alert alert--{{ msg.tags }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>&copy; 2024 TeamFinder</p>
+    </div>
+</footer>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
