@@ -51,23 +51,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'teamfinder.wsgi.application'
 
-DATABASE_URL = os.getenv('DATABASE_URL', '')
-if DATABASE_URL:
-    import re
-    m = re.match(r'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', DATABASE_URL)
-    if m:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': m.group(5),
-                'USER': m.group(1),
-                'PASSWORD': m.group(2),
-                'HOST': m.group(3),
-                'PORT': m.group(4),
-            }
+_pg_host = os.getenv('POSTGRES_HOST', '')
+if _pg_host:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'teamfinder'),
+            'USER': os.getenv('POSTGRES_USER', 'teamfinder_user'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': _pg_host,
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
         }
-    else:
-        DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'db.sqlite3'}}
+    }
 else:
     DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'db.sqlite3'}}
 

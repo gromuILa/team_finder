@@ -36,5 +36,8 @@ staticfiles/
 .DS_Store
 Thumbs.db
 
+# Docker
+.docker/
+
 # Logs
 *.log
